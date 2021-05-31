@@ -11,6 +11,8 @@ const errorHandler = require('./middlewares/errors');
 
 const router = require('./routes/index');
 
+const limiter = require('./middlewares/rateLimit');
+
 const app = express();
 
 const { PORT = 3000 } = process.env;
@@ -29,8 +31,8 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(limiter);
 app.use(requestLogger);
-
 app.use(helmet());
 
 app.use('/', router);
