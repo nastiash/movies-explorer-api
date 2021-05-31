@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 
 const { errors } = require('celebrate');
 
-const notFound = require('./routes/notFound');
+// const notFound = require('./routes/notFound');
 
 const router = require('./routes/index');
 
@@ -37,7 +37,7 @@ app.use(requestLogger);
 
 app.use('/', router);
 
-app.all('*', notFound);
+// app.all('*', notFound);
 
 app.use(errorLogger);
 app.use(errors());
