@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const cors = require('cors');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
 
 const { errors } = require('celebrate');
@@ -29,6 +30,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(requestLogger);
+
+app.use(helmet());
 
 app.use('/', router);
 
