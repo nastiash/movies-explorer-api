@@ -12,7 +12,9 @@ const NoAccessError = require('../errors/NoAccessError');
 const NotFoundError = require('../errors/NotFoundError');
 
 const getMovies = (req, res, next) => {
-  Movie.find({})
+  const owner = req.user._id;
+
+  Movie.find({ owner })
     .then((movies) => {
       res.status(200).send(movies);
     })
@@ -50,13 +52,14 @@ const createMovie = (req, res, next) => {
 };
 
 const deleteMovie = (req, res, next) => {
-  const id = req.user._id;
+  const owner = req.user._id;
+
   Movie.findById(req.params.movieId)
     .then((movie) => {
       if (!movie) {
         throw new NotFoundError('Фильм с указанным id не найдена.');
       }
-      if (movie.owner.toString() !== id) {
+      if (movie.owner.toString() !== owner) {
         throw new NoAccessError('Вы можете удалять только свои избранные фильмы.');
       } else {
         Movie.findByIdAndDelete(req.params.movieId)
