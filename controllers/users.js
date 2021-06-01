@@ -8,13 +8,19 @@ const User = require('../models/user');
 401 — ошибка авторизации
 404 — карточка или пользователь не найден
 409 — пользователь уже существует
-500 — ошибка по-умолчанию
 */
 
 const IncorrectDataError = require('../errors/IncorrectDataError');
 const NotFoundError = require('../errors/NotFoundError');
 const AuthError = require('../errors/AuthError');
 const RegisterError = require('../errors/RegisterError');
+
+const {
+  incorrectDataErrorMessage,
+  notFoundErrorMessage,
+  authErrorMessage,
+  registerErrorMessage,
+} = require('../utils/constants');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -34,10 +40,10 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'MongoError' && err.code === 11000) {
-        throw new RegisterError('Пользователь с таким email уже существует.');
+        throw new RegisterError(registerErrorMessage);
       }
       if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError(`Переданы некорректные данные ${err}.`);
+        throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);
     })
@@ -61,7 +67,7 @@ const login = (req, res, next) => {
       }).send({ message: `${token}` });
     })
     .catch(() => {
-      throw new AuthError('Введен неверный email или пароль.');
+      throw new AuthError(authErrorMessage);
     })
     .catch(next);
 };
@@ -71,13 +77,13 @@ const updateProfile = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        throw new NotFoundError('Пользователь с указанным id не найден.');
+        throw new NotFoundError(notFoundErrorMessage);
       }
       res.status(200).send(user);
     })
     .catch((err) => {
       if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError('Переданы некорректные данные.');
+        throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);
     })
@@ -92,7 +98,7 @@ const getCurrentUser = (req, res, next) => {
     })
     .catch((err) => {
       if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError('Переданы некорректные данные.');
+        throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);
     })

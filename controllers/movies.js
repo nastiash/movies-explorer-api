@@ -11,12 +11,21 @@ const IncorrectDataError = require('../errors/IncorrectDataError');
 const NoAccessError = require('../errors/NoAccessError');
 const NotFoundError = require('../errors/NotFoundError');
 
+const {
+  incorrectDataErrorMessage,
+  noAccessErrorMessage,
+  notFoundErrorMessage,
+} = require('../utils/constants');
+
 const getMovies = (req, res, next) => {
   const owner = req.user._id;
 
   Movie.find({ owner })
     .then((movies) => {
       res.status(200).send(movies);
+    })
+    .catch((err) => {
+      throw new NotFoundError(err.message);
     })
     .catch(next);
 };
@@ -44,7 +53,7 @@ const createMovie = (req, res, next) => {
     .then((movie) => res.status(200).send(movie))
     .catch((err) => {
       if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError('Переданы некорректные данные.');
+        throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);
     })
@@ -57,10 +66,10 @@ const deleteMovie = (req, res, next) => {
   Movie.findById(req.params.movieId)
     .then((movie) => {
       if (!movie) {
-        throw new NotFoundError('Фильм с указанным id не найдена.');
+        throw new NotFoundError(notFoundErrorMessage);
       }
       if (movie.owner.toString() !== owner) {
-        throw new NoAccessError('Вы можете удалять только свои избранные фильмы.');
+        throw new NoAccessError(noAccessErrorMessage);
       } else {
         Movie.findByIdAndDelete(req.params.movieId)
           .then(() => {
