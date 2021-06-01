@@ -53,7 +53,10 @@ const createMovie = (req, res, next) => {
     .then((movie) => res.status(200).send(movie))
     .catch((err) => {
       if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError(incorrectDataErrorMessage);
+        throw new IncorrectDataError(`${incorrectDataErrorMessage} : ${err.message}`);
+      }
+      if (err.name === 'MongoError' && err.code === 11000) {
+        throw new IncorrectDataError(`${incorrectDataErrorMessage} : ${err.message}`);
       }
       next(err);
     })
