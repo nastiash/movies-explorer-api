@@ -1,66 +1,71 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+const {
+  urlErrorMessage,
+  requiredErrorMessage,
+} = require('../utils/constants');
+
 const movieSchema = new mongoose.Schema({
   country: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   director: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   duration: {
     type: Number,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   year: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   description: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   image: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
     validate: {
       validator: (v) => validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
-      message: 'Введена неверная ссылка',
+      message: urlErrorMessage,
     },
   },
   trailer: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
     validate: {
       validator: (v) => validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
-      message: 'Введена неверная ссылка',
+      message: urlErrorMessage,
     },
   },
   thumbnail: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
     validate: {
       validator: (v) => validator.isURL(v, { protocols: ['http', 'https'], require_protocol: true }),
-      message: 'Введена неверная ссылка',
+      message: urlErrorMessage,
     },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   movieId: {
     type: Number,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   nameRU: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
   nameEN: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
 });
 

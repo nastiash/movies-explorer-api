@@ -10,11 +10,16 @@ const Movie = require('../models/movie');
 const IncorrectDataError = require('../errors/IncorrectDataError');
 const NoAccessError = require('../errors/NoAccessError');
 const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
 
 const {
   incorrectDataErrorMessage,
   noAccessErrorMessage,
-  notFoundErrorMessage,
+  movieNotFoundErrorMessage,
+  movieConflictErrorMessage,
+  validationErrorName,
+  castErrorName,
+  mongoErrorName,
 } = require('../utils/constants');
 
 const getMovies = (req, res, next) => {
@@ -22,10 +27,12 @@ const getMovies = (req, res, next) => {
 
   Movie.find({ owner })
     .then((movies) => {
-      res.status(200).send(movies);
+      res.send(movies);
     })
     .catch((err) => {
-      throw new NotFoundError(err.message);
+      if ((err.name === castErrorName) || (err.name === validationErrorName)) {
+        throw new IncorrectDataError(incorrectDataErrorMessage);
+      }
     })
     .catch(next);
 };
@@ -50,12 +57,13 @@ const createMovie = (req, res, next) => {
     nameEN,
     owner: req.user._id,
   })
-    .then((movie) => res.status(200).send(movie))
+    .then((movie) => res.send(movie))
     .catch((err) => {
-      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
-        throw new IncorrectDataError(`${incorrectDataErrorMessage} : ${err.message}`);
+      if ((err.name === castErrorName) || (err.name === validationErrorName)) {
+        throw new IncorrectDataError(incorrectDataErrorMessage);
+      } else if (err.name === mongoErrorName && err.code === 11000) {
+        throw new ConflictError(movieConflictErrorMessage);
       }
-      next(err);
     })
     .catch(next);
 };
@@ -66,14 +74,14 @@ const deleteMovie = (req, res, next) => {
   Movie.findById(req.params.movieId)
     .then((movie) => {
       if (!movie) {
-        throw new NotFoundError(notFoundErrorMessage);
+        throw new NotFoundError(movieNotFoundErrorMessage);
       }
       if (movie.owner.toString() !== owner) {
         throw new NoAccessError(noAccessErrorMessage);
       } else {
         Movie.findByIdAndDelete(req.params.movieId)
           .then(() => {
-            res.status(200).send(movie);
+            res.send(movie);
           })
           .catch(next);
       }

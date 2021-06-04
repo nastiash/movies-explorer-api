@@ -1,4 +1,16 @@
-const { celebrate, Joi } = require('celebrate');
+const { celebrate, Joi, CelebrateError } = require('celebrate');
+const validator = require('validator');
+
+const {
+  urlErrorMessage,
+} = require('../utils/constants');
+
+const urlValidation = (value) => {
+  if (!validator.isURL(value, { protocols: ['http', 'https'], require_protocol: true })) {
+    throw new CelebrateError(`${urlErrorMessage} : ${value}`);
+  }
+  return value;
+};
 
 const loginValidation = celebrate({
   body: Joi.object().keys({
@@ -30,17 +42,17 @@ const profileValidation = celebrate({
 
 const movieCreateValidation = celebrate({
   body: Joi.object().keys({
-    country: Joi.string().required(),
-    director: Joi.string().required(),
+    country: Joi.string().required().min(2).max(50),
+    director: Joi.string().required().min(2).max(50),
     duration: Joi.number().required(),
-    year: Joi.string().required(),
-    description: Joi.string().required(),
-    image: Joi.string().uri().required(),
-    trailer: Joi.string().uri().required(),
-    thumbnail: Joi.string().uri().required(),
+    year: Joi.string().required().min(4).max(4),
+    description: Joi.string().required().min(2).max(3000),
+    image: Joi.string().required().custom(urlValidation),
+    trailer: Joi.string().required().custom(urlValidation),
+    thumbnail: Joi.string().required().custom(urlValidation),
     movieId: Joi.number().required(),
-    nameRU: Joi.string().required(),
-    nameEN: Joi.string().required(),
+    nameRU: Joi.string().required().min(2).max(100),
+    nameEN: Joi.string().required().min(2).max(100),
   }),
 });
 

@@ -13,13 +13,17 @@ const User = require('../models/user');
 const IncorrectDataError = require('../errors/IncorrectDataError');
 const NotFoundError = require('../errors/NotFoundError');
 const AuthError = require('../errors/AuthError');
-const RegisterError = require('../errors/RegisterError');
+const ConflictError = require('../errors/ConflictError');
 
 const {
   incorrectDataErrorMessage,
   notFoundErrorMessage,
-  authErrorMessage,
+  credentialsErrorMessage,
   registerErrorMessage,
+  mongoErrorName,
+  castErrorName,
+  validationErrorName,
+  emailConflictErrorMessage,
 } = require('../utils/constants');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
@@ -32,17 +36,17 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then((user) => {
-      res.status(200).send({
+      res.send({
         _id: user._id,
         name: user.name,
         email: user.email,
       });
     })
     .catch((err) => {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        throw new RegisterError(registerErrorMessage);
+      if (err.code === 11000) {
+        throw new ConflictError(registerErrorMessage);
       }
-      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
+      if ((err.name === castErrorName) || (err.name === validationErrorName)) {
         throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);
@@ -67,23 +71,26 @@ const login = (req, res, next) => {
       }).send({ message: `${token}` });
     })
     .catch(() => {
-      throw new AuthError(authErrorMessage);
+      throw new AuthError(credentialsErrorMessage);
     })
     .catch(next);
 };
 
 const updateProfile = (req, res, next) => {
-  const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  const { email, name } = req.body;
+
+  User.findByIdAndUpdate(req.user._id, { name, email }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         throw new NotFoundError(notFoundErrorMessage);
       }
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
-      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
+      if ((err.name === castErrorName) || (err.name === validationErrorName)) {
         throw new IncorrectDataError(incorrectDataErrorMessage);
+      } else if (err.name === mongoErrorName && err.code === 11000) {
+        throw new ConflictError(emailConflictErrorMessage);
       }
       next(err);
     })
@@ -94,10 +101,10 @@ const getCurrentUser = (req, res, next) => {
   const userId = req.user._id;
   User.findById(userId)
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
-      if ((err.name === 'CastError') || (err.name === 'ValidationError')) {
+      if ((err.name === castErrorName) || (err.name === validationErrorName)) {
         throw new IncorrectDataError(incorrectDataErrorMessage);
       }
       next(err);

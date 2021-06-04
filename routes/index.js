@@ -23,8 +23,12 @@ router.use(auth, moviesRouter);
 
 const NotFoundError = require('../errors/NotFoundError');
 
+const {
+  notFoundErrorMessage,
+} = require('../utils/constants');
+
 router.use('/*', () => {
-  throw new NotFoundError('Ресурс не найден');
+  throw new NotFoundError(notFoundErrorMessage);
 });
 
 module.exports = router;

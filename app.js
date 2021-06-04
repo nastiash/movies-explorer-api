@@ -15,11 +15,11 @@ const limiter = require('./middlewares/rateLimit');
 
 const app = express();
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, DB_HOST = 'mongodb://localhost:27017/bitfilmsdb' } = process.env;
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
-mongoose.connect('mongodb://localhost:27017/bitfilmsdb', {
+mongoose.connect(`${DB_HOST}`, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useFindAndModify: false,
@@ -31,17 +31,21 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(limiter);
 app.use(requestLogger);
+
+app.use(limiter);
+
 app.use(helmet());
 
 app.use('/', router);
 
 app.use(errorLogger);
+
 app.use(errors());
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
 });

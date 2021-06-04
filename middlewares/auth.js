@@ -1,6 +1,12 @@
 const jwt = require('jsonwebtoken');
 
 const AuthError = require('../errors/AuthError');
+const IncorrectDataError = require('../errors/IncorrectDataError');
+
+const {
+  incorrectDataErrorMessage,
+  credentialsErrorMessage,
+} = require('../utils/constants');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -10,7 +16,7 @@ module.exports = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return AuthError(res);
+    throw new IncorrectDataError(incorrectDataErrorMessage);
   }
 
   const token = extractBearerToken(authorization);
@@ -19,7 +25,7 @@ module.exports = (req, res, next) => {
   try {
     payload = jwt.verify(token, NODE_ENV === 'production' ? JWT_SECRET : 'token-secret');
   } catch (err) {
-    throw new AuthError('Необходима авторизация');
+    throw new AuthError(credentialsErrorMessage);
   }
 
   req.user = payload; // записываем пейлоуд в объект запроса

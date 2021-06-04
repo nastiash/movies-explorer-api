@@ -2,35 +2,38 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+const {
+  emailInvalidErrorMessage,
+  credentialsErrorMessage,
+  passwordErrorMessage,
+  requiredErrorMessage,
+} = require('../utils/constants');
+
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
     unique: true,
     validate: {
-      validator(v) {
-        return validator.isEmail(v);
-      },
-      message: 'Введен неверный email.',
+      validator: (v) => validator.isEmail(v),
+      message: emailInvalidErrorMessage,
     },
   },
   password: {
     type: String,
-    required: true,
+    required: [true, requiredErrorMessage],
     select: false,
     minlength: 8,
     validate: {
-      validator(v) {
-        return validator.isStrongPassword(v);
-      },
-      message: 'Недостаточно надежный пароль.',
+      validator: (v) => validator.isStrongPassword(v),
+      message: passwordErrorMessage,
     },
   },
   name: {
     type: String,
     minlength: 2,
     maxlength: 30,
-    required: true,
+    required: [true, requiredErrorMessage],
   },
 });
 
@@ -38,13 +41,13 @@ userSchema.statics.findUserByCredentials = function findUser(email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new Error(credentialsErrorMessage));
       }
 
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            return Promise.reject(new Error(credentialsErrorMessage));
           }
 
           return user;
